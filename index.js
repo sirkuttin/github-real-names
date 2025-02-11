@@ -32,16 +32,16 @@ async function loadRealName(username) {
   }
 }
 
-function formatName(username) {
+function formatName(username, shouldAt) {
   const realName = realNames.get(username);
   
   switch (displayMode) {
     case 'realName':
-      return realName !== username ? realName : username;
+      return `${shouldAt ? '@' : ''}${realName}`;
     case 'userName':
-      return username;
+      return `${shouldAt ? '@' : ''}${username}`;
     case 'both':
-      return realName !== username ? `${realName} (@${username})` : username;
+      return realName !== username ? `${shouldAt ? '@' : ''}${realName} (${!shouldAt ? '@' : ''}${username})` : `${shouldAt ? '@' : ''}${username}`;
     default:
       return username;
   }
@@ -68,7 +68,7 @@ function updateList(list, filter, getUsername, shouldAt) {
     if (filter(element)) {
       const username = getUsername(element);
       loadRealName(username);
-      element.textContent = shouldAt ? '@' + formatName(username) : formatName(username);
+      element.textContent = formatName(username, shouldAt);
     }
   }
 }
@@ -87,7 +87,9 @@ function update() {
   updateList(document.getElementsByClassName('user-mention'), function (mention) {
     return mention.hasAttribute('href');
   }, function (mention) {
-    return /\/([^\/]+)$/.exec(mention.getAttribute('href'))[1];
+    const href = mention.getAttribute('href');
+    const username = href.split('/').pop().split('?')[0];
+    return username || '';
   }, true);
   updateList(document.getElementsByClassName('commit-author'), function (author) {
     return true;
