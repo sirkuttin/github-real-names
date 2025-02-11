@@ -1,21 +1,22 @@
 {
   "name": "github-real-names",
-  "version": "0.0.0",
-  "description": "plugin for Google Chrome that adds a button to toggle showing real names instead of usernames on GitHub",
+  "version": "1.3.1",
+  "description": "Chrome extension that adds a button to toggle showing real names instead of usernames on GitHub",
+  "type": "module",
   "dependencies": {
-    "he": "^0.5.0",
-    "then-request": "^1.0.0"
+    "he": "^1.2.0"
   },
   "devDependencies": {
-    "browserify": "^16.1.1"
+    "esbuild": "^0.19.0"
   },
   "scripts": {
-    "postinstall": "browserify index.js > contentscript.js"
+    "build": "esbuild index.js --bundle --outfile=contentscript.js --format=esm --target=chrome110"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/ForbesLindesay/github-real-names.git"
   },
   "author": "ForbesLindesay",
-  "license": "MIT"
+  "license": "MIT",
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

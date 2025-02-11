@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      width: 200px;
+      padding: 10px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      color: #24292f;
+    }
+  </style>
+</head>
+<body>
+  <h3>Display Names As</h3>
+  <div class="radio-group">
+    <label>
+      <input type="radio" name="displayMode" value="realName">
+      Real Name
+    </label>
+    <label>
+      <input type="radio" name="displayMode" value="userName">
+      Username
+    </label>
+    <label>
+      <input type="radio" name="displayMode" value="both">
+      Real Name (@username)
+    </label>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

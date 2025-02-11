@@ -7,23 +7,34 @@
     "128": "icon.png"
   },
   "version": "1.3.1",
+  "manifest_version": 3,
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "service_worker": "background.js",
+    "type": "module"
   },
-  "browser_action": {
+  "action": {
     "default_icon": "icon.png",
-    "default_title": "Toggle using real GitHub real names"
+    "default_title": "GitHub Name Display Options",
+    "default_popup": "popup.html"
   },
-  "content_scripts" : [
+  "content_scripts": [
     {
-      "matches" : [
-         "https://github.com/*"
+      "matches": [
+        "https://github.com/*"
       ],
-      "js" : [ "contentscript.js" ],
-      "run_at" : "document_idle",
-      "all_frames" : false
+      "js": ["contentscript.js"],
+      "run_at": "document_idle",
+      "all_frames": false
     }
   ],
-  "manifest_version": 2
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://github.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }

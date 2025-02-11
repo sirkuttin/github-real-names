@@ -1,52 +1,78 @@
 'use strict';
 
-var url = require('url');
-var request = require('then-request');
+let displayMode = 'realName';
+const realNames = new Map();
 
-var showingRealNames = true;
-var realNames = {
-};
-
-function loadRealName(username) {
-  if (realNames[username ]) return;
-  realNames[username] = username;
-  chrome.runtime.sendMessage({action: "get-real-name", username: username}, function(response) {
-    if (response && response.cached) {
-      realNames[username] = response.cached;
+async function loadRealName(username) {
+  if (realNames.has(username)) return;
+  realNames.set(username, username);
+  
+  try {
+    const response = await chrome.runtime.sendMessage({action: "get-real-name", username});
+    if (response?.cached) {
+      realNames.set(username, response.cached);
       update();
       return;
     }
-    request('GET', url.resolve('https://api.github.com/users/', username)).getBody().done(function (res) {
-      res = JSON.parse(res);
-      if (res.name) {
-        realNames[username] = res.name;
-        chrome.runtime.sendMessage({action: "set-real-name", username: username, realName: res.name}, function(response) {
-        });
-      }
-      update();
-    });
-  });
+
+    const res = await fetch(`https://api.github.com/users/${username}`);
+    const data = await res.json();
+    
+    if (data.name) {
+      realNames.set(username, data.name);
+      await chrome.runtime.sendMessage({
+        action: "set-real-name", 
+        username, 
+        realName: data.name
+      });
+    }
+    update();
+  } catch (error) {
+    console.error(`Error loading real name for ${username}:`, error);
+  }
 }
 
-chrome.runtime.sendMessage({action: "get-showingRealNames"}, function(response) {
-  showingRealNames = response.showingRealNames;
+function formatName(username) {
+  const realName = realNames.get(username);
+  
+  switch (displayMode) {
+    case 'realName':
+      return realName !== username ? realName : username;
+    case 'userName':
+      return username;
+    case 'both':
+      return realName !== username ? `${realName} (@${username})` : username;
+    default:
+      return username;
+  }
+}
+
+// Initialize display mode
+chrome.runtime.sendMessage({action: "get-display-mode"}, response => {
+  displayMode = response.displayMode;
   update();
-  setInterval(update, 1000);
+});
+
+// Use MutationObserver instead of setInterval for better performance
+const observer = new MutationObserver(() => {
+  requestAnimationFrame(update);
+});
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true
 });
 
 function updateList(list, filter, getUsername, shouldAt) {
-  for (var i = 0; i < list.length; i++) {
-    if (filter(list[i])) {
-      var username = getUsername(list[i]);
+  for (const element of list) {
+    if (filter(element)) {
+      const username = getUsername(element);
       loadRealName(username);
-      if (showingRealNames && realNames[username] && realNames[username] !== username) {
-        list[i].textContent = realNames[username];
-      } else {
-        list[i].textContent = (shouldAt ? '@' : '') + username;
-      }
+      element.textContent = shouldAt ? '@' + formatName(username) : formatName(username);
     }
   }
 }
+
 function update() {
   updateList(document.getElementsByClassName('author'), function (author) {
     return author.hasAttribute('href');
@@ -126,9 +152,9 @@ function update() {
 }
 
 update();
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-  if (message.action === 'toggle') {
-    showingRealNames = message.showingRealNames;
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'updateDisplayMode') {
+    displayMode = message.displayMode;
     update();
   }
 });
